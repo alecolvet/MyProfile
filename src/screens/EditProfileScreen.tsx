@@ -13,12 +13,16 @@ import {
   ScrollView,
 } from 'react-native';
 
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+
 import { useTheme } from '../hooks/useTheme';
+import type { RootStackParamList } from '../navigation/types';
 import type { PublicUser } from '../types/user';
 
-type EditProfileScreenProps = {
-  navigation: any;
-};
+type EditProfileScreenProps = NativeStackScreenProps<
+  RootStackParamList,
+  'EditProfile'
+>;
 
 // Usuário temporário.
 // Depois será substituído pelo usuário vindo do AuthContext.
@@ -34,8 +38,7 @@ const mockUser: PublicUser = {
 };
 
 export default function EditProfileScreen({ navigation }: EditProfileScreenProps) {
-  const { themeName } = useTheme();
-  const isDark = themeName === 'dark';
+  const { isDark } = useTheme();
 
   const [name, setName] = useState(mockUser.name);
   const [email, setEmail] = useState(mockUser.email);
