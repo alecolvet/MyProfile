@@ -20,9 +20,9 @@ type User = {
 
 type ProfileScreenProps = {
   navigation: any;
-  isDark: boolean;
-  setIsDark: (value: boolean) => void;
 };
+
+export default function ProfileScreen({ navigation }: ProfileScreenProps) {
 
 // Usuário temporário.
 // Será substituído pelo AuthContext do Integrante 3.
