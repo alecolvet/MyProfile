@@ -11,6 +11,11 @@ import {
   Alert,
 } from 'react-native';
 
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+
+import { useTheme } from '../hooks/useTheme';
+import type { RootStackParamList } from '../navigation/types';
+
 type User = {
   id: string;
   name: string;
@@ -18,11 +23,7 @@ type User = {
   email: string;
 };
 
-type ProfileScreenProps = {
-  navigation: any;
-  isDark: boolean;
-  setIsDark: (value: boolean) => void;
-};
+type ProfileScreenProps = NativeStackScreenProps<RootStackParamList, 'Profile'>;
 
 // Usuário temporário.
 // Será substituído pelo AuthContext do Integrante 3.
@@ -33,11 +34,8 @@ const mockUser: User = {
   email: 'alexandre@email.com',
 };
 
-export default function ProfileScreen({
-  navigation,
-  isDark,
-  setIsDark,
-}: ProfileScreenProps) {
+export default function ProfileScreen({ navigation }: ProfileScreenProps) {
+  const { isDark, toggleTheme } = useTheme();
   const user = mockUser;
 
   const colors = {
@@ -293,7 +291,7 @@ export default function ProfileScreen({
 
           <Switch
             value={isDark}
-            onValueChange={setIsDark}
+            onValueChange={toggleTheme}
             trackColor={{
               false: '#D1D5DB',
               true: '#818CF8',

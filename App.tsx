@@ -1,57 +1,25 @@
-import React, { useState } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { StatusBar } from 'expo-status-bar';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import ProfileScreen from './src/screens/ProfileScreen';
-import EditProfileScreen from './src/screens/EditProfileScreen';
+import { AuthProvider } from './src/hooks/useAuth';
+import { ThemeProvider, useTheme } from './src/hooks/useTheme';
+import { RootNavigator } from './src/navigation/RootNavigator';
 
-const Stack = createNativeStackNavigator();
+/** Precisa ser um componente separado para poder usar useTheme() dentro do Provider. */
+function ThemedStatusBar() {
+  const { themeName } = useTheme();
+  return <StatusBar style={themeName === 'dark' ? 'light' : 'dark'} />;
+}
 
 export default function App() {
-  const [isDark, setIsDark] = useState(false);
-
   return (
-    <NavigationContainer>
-      <Stack.Navigator
-        screenOptions={{
-          headerStyle: {
-            backgroundColor: isDark ? '#121212' : '#FFFFFF',
-          },
-          headerTintColor: isDark ? '#FFFFFF' : '#111111',
-          headerTitleStyle: {
-            fontWeight: '600',
-          },
-        }}
-      >
-        <Stack.Screen
-          name="Profile"
-          options={{
-            headerShown: false,
-          }}
-        >
-          {(props) => (
-            <ProfileScreen
-              {...props}
-              isDark={isDark}
-              setIsDark={setIsDark}
-            />
-          )}
-        </Stack.Screen>
-
-        <Stack.Screen
-          name="EditProfile"
-          options={{
-            title: 'Editar perfil',
-          }}
-        >
-          {(props) => (
-            <EditProfileScreen
-              {...props}
-              isDark={isDark}
-            />
-          )}
-        </Stack.Screen>
-      </Stack.Navigator>
-    </NavigationContainer>
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <ThemedStatusBar />
+          <RootNavigator />
+        </AuthProvider>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }

@@ -13,27 +13,38 @@ import {
   ScrollView,
 } from 'react-native';
 
-type EditProfileScreenProps = {
-  navigation: any;
-  isDark: boolean;
-};
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+
+import { useTheme } from '../hooks/useTheme';
+import type { RootStackParamList } from '../navigation/types';
+import type { PublicUser } from '../types/user';
+
+type EditProfileScreenProps = NativeStackScreenProps<
+  RootStackParamList,
+  'EditProfile'
+>;
 
 // Usuário temporário.
 // Depois será substituído pelo usuário vindo do AuthContext.
-const mockUser = {
+const mockUser: PublicUser = {
   id: '1',
   name: 'Alexandre Colvet',
   username: 'alecolvet',
   email: 'alexandre@email.com',
+  phone: '11 99999-9999',
+  city: 'São Paulo',
+  bio: 'Estudante de Engenharia de Software.',
+  createdAt: new Date().toISOString(),
 };
 
-export default function EditProfileScreen({
-  navigation,
-  isDark,
-}: EditProfileScreenProps) {
+export default function EditProfileScreen({ navigation }: EditProfileScreenProps) {
+  const { isDark } = useTheme();
+
   const [name, setName] = useState(mockUser.name);
-  const [username, setUsername] = useState(mockUser.username);
   const [email, setEmail] = useState(mockUser.email);
+  const [phone, setPhone] = useState(mockUser.phone);
+  const [city, setCity] = useState(mockUser.city);
+  const [bio, setBio] = useState(mockUser.bio);
 
   const [loading, setLoading] = useState(false);
 
@@ -54,21 +65,15 @@ export default function EditProfileScreen({
 
   const handleSave = async () => {
     const trimmedName = name.trim();
-    const trimmedUsername = username.trim();
     const trimmedEmail = email.trim();
+    const trimmedPhone = phone.trim();
+    const trimmedCity = city.trim();
+    const trimmedBio = bio.trim();
 
     if (!trimmedName) {
       Alert.alert(
         'Atenção',
         'O nome é obrigatório.',
-      );
-      return;
-    }
-
-    if (!trimmedUsername) {
-      Alert.alert(
-        'Atenção',
-        'O nome de usuário é obrigatório.',
       );
       return;
     }
@@ -95,10 +100,12 @@ export default function EditProfileScreen({
       /*
        * Futuramente será substituído por:
        *
-       * await updateUser({
+       * await updateProfile({
        *   name: trimmedName,
-       *   username: trimmedUsername,
        *   email: trimmedEmail,
+       *   phone: trimmedPhone,
+       *   city: trimmedCity,
+       *   bio: trimmedBio,
        * });
        */
 
@@ -213,38 +220,6 @@ export default function EditProfileScreen({
               />
             </View>
 
-            {/* Username */}
-            <View style={styles.field}>
-              <Text
-                style={[
-                  styles.label,
-                  {
-                    color: colors.text,
-                  },
-                ]}
-              >
-                Nome de usuário
-              </Text>
-
-              <TextInput
-                style={[
-                  styles.input,
-                  {
-                    backgroundColor: colors.input,
-                    borderColor: colors.border,
-                    color: colors.text,
-                  },
-                ]}
-                value={username}
-                onChangeText={setUsername}
-                placeholder="Digite seu nome de usuário"
-                placeholderTextColor={colors.placeholder}
-                autoCapitalize="none"
-                autoCorrect={false}
-                editable={!loading}
-              />
-            </View>
-
             {/* E-mail */}
             <View style={styles.field}>
               <Text
@@ -274,6 +249,102 @@ export default function EditProfileScreen({
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
+                editable={!loading}
+              />
+            </View>
+
+            {/* Telefone */}
+            <View style={styles.field}>
+              <Text
+                style={[
+                  styles.label,
+                  {
+                    color: colors.text,
+                  },
+                ]}
+              >
+                Telefone
+              </Text>
+
+              <TextInput
+                style={[
+                  styles.input,
+                  {
+                    backgroundColor: colors.input,
+                    borderColor: colors.border,
+                    color: colors.text,
+                  },
+                ]}
+                value={phone}
+                onChangeText={setPhone}
+                placeholder="Digite seu telefone"
+                placeholderTextColor={colors.placeholder}
+                keyboardType="phone-pad"
+                editable={!loading}
+              />
+            </View>
+
+            {/* Cidade */}
+            <View style={styles.field}>
+              <Text
+                style={[
+                  styles.label,
+                  {
+                    color: colors.text,
+                  },
+                ]}
+              >
+                Cidade
+              </Text>
+
+              <TextInput
+                style={[
+                  styles.input,
+                  {
+                    backgroundColor: colors.input,
+                    borderColor: colors.border,
+                    color: colors.text,
+                  },
+                ]}
+                value={city}
+                onChangeText={setCity}
+                placeholder="Digite sua cidade"
+                placeholderTextColor={colors.placeholder}
+                autoCapitalize="words"
+                editable={!loading}
+              />
+            </View>
+
+            {/* Biografia */}
+            <View style={styles.field}>
+              <Text
+                style={[
+                  styles.label,
+                  {
+                    color: colors.text,
+                  },
+                ]}
+              >
+                Biografia
+              </Text>
+
+              <TextInput
+                style={[
+                  styles.input,
+                  styles.textArea,
+                  {
+                    backgroundColor: colors.input,
+                    borderColor: colors.border,
+                    color: colors.text,
+                  },
+                ]}
+                value={bio}
+                onChangeText={setBio}
+                placeholder="Fale um pouco sobre você"
+                placeholderTextColor={colors.placeholder}
+                multiline
+                numberOfLines={4}
+                textAlignVertical="top"
                 editable={!loading}
               />
             </View>
@@ -391,6 +462,11 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
 
     fontSize: 16,
+  },
+
+  textArea: {
+    minHeight: 110,
+    paddingTop: 14,
   },
 
   saveButton: {
