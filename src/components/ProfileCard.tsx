@@ -12,27 +12,35 @@ interface ProfileData {
 
 interface ProfileCardProps {
   data: ProfileData;
-  isDark: boolean;
+  isDark?: boolean;
 }
 
-export const ProfileCard: React.FC<ProfileCardProps> = ({ data, isDark }) => {
+export const ProfileCard: React.FC<ProfileCardProps> = ({ data, isDark = false }) => {
   return (
     <View style={[styles.card, isDark ? styles.cardDark : styles.cardLight]}>
       <Text style={[styles.title, isDark ? styles.textDark : styles.textLight]}>{data.name}</Text>
       <Text style={isDark ? styles.textMutedDark : styles.textMutedLight}>@{data.username}</Text>
-      
+
       <View style={styles.infoContainer}>
         <Text style={[styles.info, isDark ? styles.textDark : styles.textLight]}>E-mail: {data.email}</Text>
-        {data.phone && <Text style={[styles.info, isDark ? styles.textDark : styles.textLight]}>Telefone: {data.phone}</Text>}
-        {data.city && <Text style={[styles.info, isDark ? styles.textDark : styles.textLight]}>Cidade: {data.city}</Text>}
+        
+        {/* CORREÇÃO: Usando ternário para evitar o crash de string vazia */}
+        {data.phone ? (
+          <Text style={[styles.info, isDark ? styles.textDark : styles.textLight]}>Telefone: {data.phone}</Text>
+        ) : null}
+        
+        {data.city ? (
+          <Text style={[styles.info, isDark ? styles.textDark : styles.textLight]}>Cidade: {data.city}</Text>
+        ) : null}
       </View>
 
-      {data.bio && (
+      {/* CORREÇÃO: Usando ternário para a biografia também */}
+      {data.bio ? (
         <View style={styles.bioContainer}>
           <Text style={[styles.bioTitle, isDark ? styles.textDark : styles.textLight]}>Biografia:</Text>
           <Text style={[styles.bioText, isDark ? styles.textDark : styles.textLight]}>{data.bio}</Text>
         </View>
-      )}
+      ) : null}
     </View>
   );
 };

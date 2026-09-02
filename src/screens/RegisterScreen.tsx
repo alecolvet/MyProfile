@@ -11,24 +11,13 @@ export default function RegisterScreen({ navigation, isDark }: any) {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  // Traz a função de cadastro do contexto global
   const { signUp } = useAuth();
 
   const handleRegister = async () => {
     try {
-      // O signUp faz a validação completa e salva o usuário no AsyncStorage
-      await signUp({
-        name,
-        username,
-        email,
-        password,
-        confirmPassword,
-      });
-      
-      // Obs: Dependendo de como o App.tsx gerencia a navegação,
-      // ao fazer signUp com sucesso, ele já loga e manda para o Perfil sozinho!
+      await signUp({ name, username, email, password, confirmPassword });
+      // Ao terminar o cadastro, o useAuth já loga o usuário automaticamente!
     } catch (error: any) {
-      // O backend do seu colega vai devolver mensagens exatas como "As senhas não são iguais."
       Alert.alert('Erro', error.message || 'Não foi possível concluir o cadastro.');
     }
   };
@@ -45,16 +34,8 @@ export default function RegisterScreen({ navigation, isDark }: any) {
       
       <View style={styles.footer}>
         <Text style={{ color: isDark ? '#ccc' : '#666' }}>Já tem cadastro?</Text>
-        
-        <TouchableOpacity 
-          style={styles.linkButton} 
-          onPress={() => navigation.navigate('Login')}
-        >
-          <Text style={{ 
-            color: isDark ? '#4da3ff' : '#007bff', 
-            fontWeight: 'bold', 
-            fontSize: 16 
-          }}>
+        <TouchableOpacity style={styles.linkButton} onPress={() => navigation.navigate('Login')}>
+          <Text style={{ color: isDark ? '#4da3ff' : '#007bff', fontWeight: 'bold', fontSize: 16 }}>
             Entrar
           </Text>
         </TouchableOpacity>
