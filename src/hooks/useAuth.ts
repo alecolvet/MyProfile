@@ -1,13 +1,13 @@
 import React, {
   createContext,
-  useContext,
-  useState,
-  useEffect,
-  useCallback,
-  useMemo,
   createElement,
-  type ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
 } from 'react';
+
 import {
   authenticateUser,
   clearSession,
@@ -16,144 +16,289 @@ import {
   saveSession,
   updateUserProfile,
 } from '../services/authService';
-import type { Credentials, Session, ValidationResult } from '../types/auth';
+
+import type {
+  AuthContextValue,
+  Credentials,
+} from '../types/auth';
+
 import type {
   PublicUser,
   RegisterInput,
   UpdateProfileInput,
 } from '../types/user';
 
-export const AuthContext = createContext<AuthContextValue | null>(null);
+const AuthContext =
+  createContext<AuthContextValue | undefined>(
+    undefined,
+  );
 
-export interface AuthContextValue {
-  user: PublicUser | null;
-  loading: boolean;
-  error: string | null;
-  signUp: (input: RegisterInput) => Promise<void>;
-  signIn: (credentials: Credentials) => Promise<void>;
-  signOut: () => Promise<void>;
-  updateProfile: (input: UpdateProfileInput) => Promise<void>;
-  clearError: () => void;
-}
+type AuthProviderProps = {
+  children: React.ReactNode;
+};
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<PublicUser | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export function AuthProvider({
+  children,
+}: AuthProviderProps) {
+  const [user, setUser] =
+    useState<PublicUser | null>(null);
 
-  // Ao abrir o app: verifica no AsyncStorage se já existe sessão ativa.
+  /*
+   * Este loading representa principalmente
+   * a recuperação da sessão quando o aplicativo
+   * é iniciado.
+   *
+   * Login, cadastro, edição e logout possuem
+   * seus próprios loadings nas telas.
+   */
+  const [loading, setLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState<string | null>(null);
+
+  // --------------------
+  // Restaurar sessão
+  // --------------------
+
   useEffect(() => {
-    let active = true;
+    let isMounted = true;
 
-    async function restore() {
-      try {
-        const restoredUser = await restoreSessionUser();
-        if (active) {
-          setUser(restoredUser);
-        }
-      } catch (err) {
-        console.error('[useAuth] Erro ao restaurar sessão:', err);
-      } finally {
-        if (active) {
-          setLoading(false);
-        }
-      }
-    }
+    const restoreSession =
+      async (): Promise<void> => {
+        try {
+          setError(null);
 
-    restore();
+          const restoredUser =
+            await restoreSessionUser();
+
+          if (isMounted) {
+            setUser(restoredUser);
+          }
+        } catch (error: unknown) {
+          console.error(
+            'Erro ao restaurar sessão:',
+            error,
+          );
+
+          if (isMounted) {
+            setUser(null);
+
+            setError(
+              'Não foi possível recuperar a sessão.',
+            );
+          }
+        } finally {
+          if (isMounted) {
+            setLoading(false);
+          }
+        }
+      };
+
+    void restoreSession();
 
     return () => {
-      active = false;
+      isMounted = false;
     };
   }, []);
 
-  const signUp = useCallback(async (input: RegisterInput) => {
-    setError(null);
+  // --------------------
+  // Cadastro
+  // --------------------
 
-    try {
-      const newUser = await registerUser(input);
-      await saveSession(newUser.id);
-      setUser(newUser);
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : 'Não foi possível concluir o cadastro.';
-      setError(message);
-      throw err;
-    }
-  }, []);
-
-  const signIn = useCallback(async (credentials: Credentials) => {
-    setError(null);
-
-    try {
-      const authenticatedUser = await authenticateUser(credentials);
-      await saveSession(authenticatedUser.id);
-      setUser(authenticatedUser);
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : 'Não foi possível efetuar o login.';
-      setError(message);
-      throw err;
-    }
-  }, []);
-
-  // Remove somente a sessão; o cadastro do usuário permanece salvo.
-  const signOut = useCallback(async () => {
-    setError(null);
-
-    try {
-      await clearSession();
-    } catch (err) {
-      console.error('[useAuth] Erro ao encerrar sessão:', err);
-    } finally {
-      setUser(null);
-    }
-  }, []);
-
-  const updateProfile = useCallback(
-    async (input: UpdateProfileInput) => {
-      if (!user) {
-        throw new Error('Nenhum usuário autenticado.');
-      }
-
-      setError(null);
-
+  const signUp = useCallback(
+    async (
+      input: RegisterInput,
+    ): Promise<void> => {
       try {
-        const updatedUser = await updateUserProfile(user.id, input);
-        setUser(updatedUser);
-      } catch (err) {
+        setError(null);
+
+        const newUser =
+          await registerUser(input);
+
+        await saveSession(newUser.id);
+
+        setUser(newUser);
+      } catch (error: unknown) {
         const message =
-          err instanceof Error ? err.message : 'Não foi possível salvar as alterações.';
+          error instanceof Error
+            ? error.message
+            : 'Não foi possível realizar o cadastro.';
+
         setError(message);
-        throw err;
+
+        throw new Error(message);
       }
     },
-    [user],
+    [],
   );
 
-  const clearError = useCallback(() => setError(null), []);
+  // --------------------
+  // Login
+  // --------------------
 
-  const value = useMemo<AuthContextValue>(
-    () => ({
-      user,
-      loading,
-      error,
-      signUp,
-      signIn,
-      signOut,
-      updateProfile,
-      clearError,
-    }),
-    [user, loading, error, signUp, signIn, signOut, updateProfile, clearError],
+  const signIn = useCallback(
+    async (
+      credentials: Credentials,
+    ): Promise<void> => {
+      try {
+        setError(null);
+
+        const authenticatedUser =
+          await authenticateUser(
+            credentials,
+          );
+
+        await saveSession(
+          authenticatedUser.id,
+        );
+
+        setUser(authenticatedUser);
+      } catch (error: unknown) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : 'Não foi possível realizar o login.';
+
+        setError(message);
+
+        throw new Error(message);
+      }
+    },
+    [],
   );
 
-  return createElement(AuthContext.Provider, { value }, children);
+  // --------------------
+  // Logout
+  // --------------------
+
+  const signOut =
+    useCallback(
+      async (): Promise<void> => {
+        try {
+          setError(null);
+
+          /*
+           * Primeiro removemos a sessão
+           * persistida.
+           *
+           * Somente depois disso removemos
+           * o usuário do estado.
+           */
+          await clearSession();
+
+          setUser(null);
+        } catch (error: unknown) {
+          const message =
+            error instanceof Error
+              ? error.message
+              : 'Não foi possível encerrar a sessão.';
+
+          setError(message);
+
+          throw new Error(message);
+        }
+      },
+      [],
+    );
+
+  // --------------------
+  // Atualizar perfil
+  // --------------------
+
+  const updateProfile =
+    useCallback(
+      async (
+        input: UpdateProfileInput,
+      ): Promise<void> => {
+        if (!user) {
+          const message =
+            'Nenhum usuário autenticado.';
+
+          setError(message);
+
+          throw new Error(message);
+        }
+
+        try {
+          setError(null);
+
+          const updatedUser =
+            await updateUserProfile(
+              user.id,
+              input,
+            );
+
+          setUser(updatedUser);
+        } catch (error: unknown) {
+          const message =
+            error instanceof Error
+              ? error.message
+              : 'Não foi possível atualizar o perfil.';
+
+          setError(message);
+
+          throw new Error(message);
+        }
+      },
+      [user],
+    );
+
+  // --------------------
+  // Limpar erros
+  // --------------------
+
+  const clearError =
+    useCallback((): void => {
+      setError(null);
+    }, []);
+
+  // --------------------
+  // Valor do contexto
+  // --------------------
+
+  const value =
+    useMemo<AuthContextValue>(
+      () => ({
+        user,
+        loading,
+        error,
+        signUp,
+        signIn,
+        signOut,
+        updateProfile,
+        clearError,
+      }),
+      [
+        user,
+        loading,
+        error,
+        signUp,
+        signIn,
+        signOut,
+        updateProfile,
+        clearError,
+      ],
+    );
+
+  return createElement(
+    AuthContext.Provider,
+    {
+      value,
+    },
+    children,
+  );
 }
 
 export function useAuth(): AuthContextValue {
-  const context = useContext(AuthContext);
+  const context =
+    useContext(AuthContext);
+
   if (!context) {
-    throw new Error('useAuth precisa estar dentro de um <AuthProvider>.');
+    throw new Error(
+      'useAuth deve ser utilizado dentro de um AuthProvider.',
+    );
   }
+
   return context;
 }

@@ -21,11 +21,24 @@ export type ValidationResult = {
 
 export type AuthContextValue = {
   user: PublicUser | null;
+
   loading: boolean;
+
   error: string | null;
-  signUp(input: RegisterInput): Promise<void>;
-  signIn(credentials: Credentials): Promise<void>;
-  signOut(): Promise<void>;
-  updateProfile(input: UpdateProfileInput): Promise<void>;
-  clearError(): void;
+
+  signUp: (
+    input: RegisterInput,
+  ) => Promise<void>;
+
+  signIn: (
+    credentials: Credentials,
+  ) => Promise<void>;
+
+  signOut: () => Promise<void>;
+
+  updateProfile: (
+    input: UpdateProfileInput,
+  ) => Promise<void>;
+
+  clearError: () => void;
 };

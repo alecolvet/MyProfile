@@ -1,35 +1,82 @@
 import React from 'react';
-import { View, Text, Switch, StyleSheet } from 'react-native';
+import {
+  StyleSheet,
+  Switch,
+  Text,
+  View,
+} from 'react-native';
+
+import { useTheme } from '../hooks/useTheme';
 
 interface ThemeSwitchProps {
   isDark: boolean;
   onToggle: (value: boolean) => void;
 }
 
-export const ThemeSwitch: React.FC<ThemeSwitchProps> = ({ isDark, onToggle }) => {
+export function ThemeSwitch({
+  isDark,
+  onToggle,
+}: ThemeSwitchProps) {
+  const { theme } = useTheme();
+
   return (
     <View style={styles.container}>
-      <Text style={[styles.label, isDark ? styles.textDark : styles.textLight]}>Light ☀️</Text>
+      <Text
+        style={[
+          styles.label,
+          {
+            color: isDark
+              ? theme.colors.textMuted
+              : theme.colors.primary,
+          },
+        ]}
+      >
+        Light
+      </Text>
+
       <Switch
         value={isDark}
         onValueChange={onToggle}
-        trackColor={{ false: '#ccc', true: '#555' }}
-        thumbColor={isDark ? '#4da3ff' : '#007bff'}
+        trackColor={{
+          false: theme.colors.border,
+          true: theme.colors.primary,
+        }}
+        thumbColor={
+          theme.colors.card
+        }
+        ios_backgroundColor={
+          theme.colors.border
+        }
       />
-      <Text style={[styles.label, isDark ? styles.textDark : styles.textLight]}>🌙 Dark</Text>
+
+      <Text
+        style={[
+          styles.label,
+          {
+            color: isDark
+              ? theme.colors.primary
+              : theme.colors.textMuted,
+          },
+        ]}
+      >
+        Dark
+      </Text>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
+    width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
-    marginVertical: 16,
+    gap: 12,
+    marginTop: 12,
   },
-  label: { fontSize: 16, fontWeight: 'bold' },
-  textLight: { color: '#333' },
-  textDark: { color: '#f5f5f5' },
+
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
 });

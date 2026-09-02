@@ -1,24 +1,63 @@
 import React from 'react';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import {
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+
+import { useTheme } from '../hooks/useTheme';
 
 interface LoadingProps {
-  isDark: boolean;
+  isDark?: boolean;
+  message?: string;
 }
 
-export const Loading: React.FC<LoadingProps> = ({ isDark }) => {
+export function Loading({
+  message = 'Carregando...',
+}: LoadingProps) {
+  const { theme } = useTheme();
+
   return (
-    <View style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
-      <ActivityIndicator size="large" color={isDark ? '#4da3ff' : '#007bff'} />
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor:
+            theme.colors.background,
+        },
+      ]}
+    >
+      <ActivityIndicator
+        size="large"
+        color={theme.colors.primary}
+      />
+
+      <Text
+        style={[
+          styles.text,
+          {
+            color: theme.colors.text,
+          },
+        ]}
+      >
+        {message}
+      </Text>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
   },
-  bgLight: { backgroundColor: '#f5f5f5' },
-  bgDark: { backgroundColor: '#121212' },
+
+  text: {
+    marginTop: 12,
+    fontSize: 16,
+    textAlign: 'center',
+  },
 });

@@ -1,33 +1,93 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, TouchableOpacityProps } from 'react-native';
 
-interface CustomButtonProps extends TouchableOpacityProps {
+import {
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  type TouchableOpacityProps,
+} from 'react-native';
+
+import { useTheme } from '../hooks/useTheme';
+
+interface CustomButtonProps
+  extends TouchableOpacityProps {
   title: string;
   isDark?: boolean;
+  loading?: boolean;
 }
 
-export const CustomButton: React.FC<CustomButtonProps> = ({ title, isDark, style, ...rest }) => {
+export function CustomButton({
+  title,
+  isDark: _isDark,
+  loading = false,
+  disabled,
+  style,
+  ...rest
+}: CustomButtonProps) {
+  const { theme } = useTheme();
+
+  const isDisabled =
+    disabled || loading;
+
   return (
     <TouchableOpacity
-      style={[styles.button, isDark ? styles.buttonDark : styles.buttonLight, style]}
       {...rest}
+      activeOpacity={0.8}
+      disabled={isDisabled}
+      style={[
+        styles.button,
+        {
+          backgroundColor:
+            theme.colors.primary,
+        },
+        isDisabled &&
+          styles.disabledButton,
+        style,
+      ]}
     >
-      <Text style={[styles.text, isDark ? styles.textDark : styles.textLight]}>{title}</Text>
+      {loading ? (
+        <ActivityIndicator
+          size="small"
+          color={
+            theme.colors.onPrimary
+          }
+        />
+      ) : (
+        <Text
+          style={[
+            styles.buttonText,
+            {
+              color:
+                theme.colors.onPrimary,
+            },
+          ]}
+        >
+          {title}
+        </Text>
+      )}
     </TouchableOpacity>
   );
-};
+}
 
 const styles = StyleSheet.create({
   button: {
-    padding: 16,
+    width: '100%',
+    minHeight: 48,
     borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    width: '100%',
   },
-  buttonLight: { backgroundColor: '#007bff' },
-  buttonDark: { backgroundColor: '#4da3ff' },
-  text: { fontSize: 16, fontWeight: 'bold' },
-  textLight: { color: '#fff' },
-  textDark: { color: '#121212' },
+
+  buttonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+
+  disabledButton: {
+    opacity: 0.6,
+  },
 });

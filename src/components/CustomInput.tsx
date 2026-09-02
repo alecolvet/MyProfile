@@ -1,51 +1,119 @@
 import React from 'react';
-import { TextInput, TextInputProps, StyleSheet, View, Text } from 'react-native';
 
-interface CustomInputProps extends TextInputProps {
+import {
+  StyleSheet,
+  Text,
+  TextInput,
+  type TextInputProps,
+  View,
+} from 'react-native';
+
+import { useTheme } from '../hooks/useTheme';
+
+interface CustomInputProps
+  extends TextInputProps {
   label: string;
-  isDark: boolean;
+  isDark?: boolean;
   error?: string;
 }
 
-export const CustomInput: React.FC<CustomInputProps> = ({ label, isDark, error, ...rest }) => {
+export function CustomInput({
+  label,
+  error,
+  isDark,
+  style,
+  placeholderTextColor,
+  ...rest
+}: CustomInputProps) {
+  const {
+    theme,
+    isDark: currentIsDark,
+  } = useTheme();
+
+  const resolvedIsDark =
+    isDark ?? currentIsDark;
+
   return (
     <View style={styles.container}>
-      <Text style={[styles.label, isDark ? styles.textDark : styles.textLight]}>{label}</Text>
+      <Text
+        style={[
+          styles.label,
+          {
+            color: theme.colors.text,
+          },
+        ]}
+      >
+        {label}
+      </Text>
+
       <TextInput
+        {...rest}
         style={[
           styles.input,
-          isDark ? styles.inputDark : styles.inputLight,
-          error ? styles.inputError : null
+          {
+            backgroundColor:
+              theme.colors.input,
+
+            borderColor: error
+              ? theme.colors.error
+              : theme.colors.inputBorder,
+
+            color: theme.colors.text,
+          },
+          style,
         ]}
-        placeholderTextColor={isDark ? '#999' : '#666'}
-        {...rest}
+        placeholderTextColor={
+          placeholderTextColor ??
+          theme.colors.placeholder
+        }
+        keyboardAppearance={
+          resolvedIsDark
+            ? 'dark'
+            : 'light'
+        }
       />
-      {error && <Text style={styles.errorText}>{error}</Text>}
+
+      {error ? (
+        <Text
+          style={[
+            styles.errorText,
+            {
+              color:
+                theme.colors.error,
+            },
+          ]}
+        >
+          {error}
+        </Text>
+      ) : null}
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  container: { marginBottom: 16, width: '100%' },
-  label: { marginBottom: 8, fontSize: 16, fontWeight: 'bold' },
-  textLight: { color: '#333' },
-  textDark: { color: '#f5f5f5' },
+  container: {
+    width: '100%',
+    marginBottom: 16,
+  },
+
+  label: {
+    marginBottom: 8,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+
   input: {
+    width: '100%',
+    minHeight: 48,
     borderWidth: 1,
     borderRadius: 8,
-    padding: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
     fontSize: 16,
   },
-  inputLight: {
-    backgroundColor: '#fff',
-    borderColor: '#ccc',
-    color: '#333',
+
+  errorText: {
+    marginTop: 4,
+    fontSize: 12,
   },
-  inputDark: {
-    backgroundColor: '#333',
-    borderColor: '#555',
-    color: '#f5f5f5',
-  },
-  inputError: { borderColor: '#ff4444' },
-  errorText: { color: '#ff4444', fontSize: 12, marginTop: 4 },
 });

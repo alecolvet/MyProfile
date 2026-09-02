@@ -10,7 +10,8 @@ export type User = {
   createdAt: string;
 };
 
-export type PublicUser = Omit<User, 'password'>;
+export type PublicUser =
+  Omit<User, 'password'>;
 
 export type RegisterInput = {
   name: string;
@@ -20,4 +21,12 @@ export type RegisterInput = {
   confirmPassword: string;
 };
 
-export type UpdateProfileInput = Pick<User, 'name' | 'email' | 'phone' | 'city' | 'bio'>;
+export type UpdateProfileInput =
+  Pick<
+    User,
+    | 'name'
+    | 'email'
+    | 'phone'
+    | 'city'
+    | 'bio'
+  >;

@@ -1,4 +1,4 @@
-import {
+import React, {
   createContext,
   createElement,
   useCallback,
@@ -6,94 +6,232 @@ import {
   useEffect,
   useMemo,
   useState,
-  type ReactNode,
 } from 'react';
 
 import { STORAGE_KEYS } from '../constants/storage';
 import { getItem, setItem } from '../services/storageService';
-import { darkTheme } from '../themes/dark';
-import { lightTheme } from '../themes/light';
-import type { Theme, ThemeContextValue, ThemeName } from '../types/theme';
 
-const THEMES: Record<ThemeName, Theme> = {
-  light: lightTheme,
-  dark: darkTheme,
+import { lightTheme } from '../themes/light';
+import { darkTheme } from '../themes/dark';
+
+import type {
+  Theme,
+  ThemeContextValue,
+  ThemeName,
+} from '../types/theme';
+
+const ThemeContext =
+  createContext<ThemeContextValue | undefined>(
+    undefined,
+  );
+
+type ThemeProviderProps = {
+  children: React.ReactNode;
 };
 
-const DEFAULT_THEME: ThemeName = 'light';
-
-export const ThemeContext = createContext<ThemeContextValue | null>(null);
-
-function isThemeName(value: unknown): value is ThemeName {
-  return value === 'light' || value === 'dark';
+function isThemeName(
+  value: unknown,
+): value is ThemeName {
+  return (
+    value === 'light' ||
+    value === 'dark'
+  );
 }
 
-export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [themeName, setThemeName] = useState<ThemeName>(DEFAULT_THEME);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export function ThemeProvider({
+  children,
+}: ThemeProviderProps) {
+  const [themeName, setThemeName] =
+    useState<ThemeName>('light');
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState<string | null>(null);
+
+  // --------------------
+  // Recuperar tema salvo
+  // --------------------
 
   useEffect(() => {
-    let active = true;
+    let isMounted = true;
 
-    async function restoreTheme() {
-      const saved = await getItem<ThemeName>(STORAGE_KEYS.THEME);
-      if (!active) return;
-      if (isThemeName(saved)) setThemeName(saved);
-      setLoading(false);
-    }
+    const restoreTheme =
+      async (): Promise<void> => {
+        try {
+          setError(null);
 
-    restoreTheme();
+          const savedTheme =
+            await getItem<ThemeName>(
+              STORAGE_KEYS.THEME,
+            );
+
+          if (
+            isMounted &&
+            isThemeName(savedTheme)
+          ) {
+            setThemeName(savedTheme);
+          }
+        } catch (error: unknown) {
+          console.error(
+            'Erro ao recuperar tema:',
+            error,
+          );
+
+          if (isMounted) {
+            setThemeName('light');
+
+            setError(
+              'Não foi possível recuperar o tema salvo.',
+            );
+          }
+        } finally {
+          if (isMounted) {
+            setLoading(false);
+          }
+        }
+      };
+
+    void restoreTheme();
 
     return () => {
-      active = false;
+      isMounted = false;
     };
   }, []);
 
-  /** Aplica o tema na hora e persiste; se o AsyncStorage falhar, volta ao anterior. */
-  const setTheme = useCallback(
-    async (next: ThemeName) => {
-      const previous = themeName;
-      if (next === previous) return;
+  // --------------------
+  // Definir tema
+  // --------------------
 
-      setThemeName(next);
+  const setTheme =
+    useCallback(
+      async (
+        newTheme: ThemeName,
+      ): Promise<void> => {
+        const previousTheme =
+          themeName;
+
+        try {
+          setError(null);
+
+          setThemeName(newTheme);
+
+          await setItem<ThemeName>(
+            STORAGE_KEYS.THEME,
+            newTheme,
+          );
+        } catch (error: unknown) {
+          console.error(
+            'Erro ao salvar tema:',
+            error,
+          );
+
+          setThemeName(previousTheme);
+
+          const message =
+            'Não foi possível salvar o tema selecionado.';
+
+          setError(message);
+
+          throw new Error(message);
+        }
+      },
+      [themeName],
+    );
+
+  // --------------------
+  // Alternar tema
+  // --------------------
+
+  const toggleTheme =
+    useCallback(
+      async (): Promise<void> => {
+        const newTheme: ThemeName =
+          themeName === 'dark'
+            ? 'light'
+            : 'dark';
+
+        await setTheme(newTheme);
+      },
+      [
+        themeName,
+        setTheme,
+      ],
+    );
+
+  // --------------------
+  // Limpar erro
+  // --------------------
+
+  const clearThemeError =
+    useCallback((): void => {
       setError(null);
+    }, []);
 
-      try {
-        await setItem(STORAGE_KEYS.THEME, next);
-      } catch {
-        setThemeName(previous);
-        setError('Não foi possível salvar o tema escolhido.');
-      }
+  // --------------------
+  // Tema atual
+  // --------------------
+
+  const theme =
+    useMemo<Theme>(
+      () =>
+        themeName === 'dark'
+          ? darkTheme
+          : lightTheme,
+      [themeName],
+    );
+
+  const isDark =
+    themeName === 'dark';
+
+  // --------------------
+  // Valor do contexto
+  // --------------------
+
+  const value =
+    useMemo<ThemeContextValue>(
+      () => ({
+        themeName,
+        theme,
+        isDark,
+        loading,
+        error,
+        setTheme,
+        toggleTheme,
+        clearThemeError,
+      }),
+      [
+        themeName,
+        theme,
+        isDark,
+        loading,
+        error,
+        setTheme,
+        toggleTheme,
+        clearThemeError,
+      ],
+    );
+
+  return createElement(
+    ThemeContext.Provider,
+    {
+      value,
     },
-    [themeName],
+    children,
   );
-
-  const toggleTheme = useCallback(
-    () => setTheme(themeName === 'light' ? 'dark' : 'light'),
-    [setTheme, themeName],
-  );
-
-  const value = useMemo<ThemeContextValue>(
-    () => ({
-      theme: THEMES[themeName],
-      themeName,
-      isDark: themeName === 'dark',
-      loading,
-      error,
-      toggleTheme,
-      setTheme,
-    }),
-    [themeName, loading, error, toggleTheme, setTheme],
-  );
-
-  return createElement(ThemeContext.Provider, { value }, children);
 }
 
-export function useTheme(): ThemeContextValue {
-  const context = useContext(ThemeContext);
+export function useTheme():
+  ThemeContextValue {
+  const context =
+    useContext(ThemeContext);
+
   if (!context) {
-    throw new Error('useTheme precisa estar dentro de um <ThemeProvider>.');
+    throw new Error(
+      'useTheme deve ser utilizado dentro de um ThemeProvider.',
+    );
   }
+
   return context;
 }
