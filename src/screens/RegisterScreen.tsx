@@ -1,245 +1,74 @@
 import React, { useState } from 'react';
-import {
-  KeyboardAvoidingView,
-  Platform,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-} from 'react-native';
-
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-
-import { CustomButton } from '../components/CustomButton';
+import { StyleSheet, ScrollView, Alert, View, Text, TouchableOpacity } from 'react-native';
 import { CustomInput } from '../components/CustomInput';
+import { CustomButton } from '../components/CustomButton';
 import { useAuth } from '../hooks/useAuth';
-import { useTheme } from '../hooks/useTheme';
-import type { RootStackParamList } from '../navigation/types';
-import { isMatch, isMinLength, isRequired, isValidEmail } from '../services/authService';
 
-type RegisterScreenProps = NativeStackScreenProps<RootStackParamList, 'Register'>;
+export default function RegisterScreen({ navigation, isDark }: any) {
+  const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
-type FormState = {
-  name: string;
-  username: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-};
+  // Traz a função de cadastro do contexto global
+  const { signUp } = useAuth();
 
-type FormErrors = Partial<Record<keyof FormState, string>>;
-
-const INITIAL_FORM: FormState = {
-  name: '',
-  username: '',
-  email: '',
-  password: '',
-  confirmPassword: '',
-};
-
-function validate(form: FormState): FormErrors {
-  const errors: FormErrors = {};
-
-  if (!isRequired(form.name)) {
-    errors.name = 'Informe seu nome.';
-  }
-
-  if (!isRequired(form.username)) {
-    errors.username = 'Informe um nome de usuário.';
-  }
-
-  if (!isRequired(form.email)) {
-    errors.email = 'Informe seu e-mail.';
-  } else if (!isValidEmail(form.email)) {
-    errors.email = 'Informe um e-mail válido.';
-  }
-
-  if (!isRequired(form.password)) {
-    errors.password = 'Informe uma senha.';
-  } else if (!isMinLength(form.password, 6)) {
-    errors.password = 'A senha deve ter pelo menos 6 caracteres.';
-  }
-
-  if (!isRequired(form.confirmPassword)) {
-    errors.confirmPassword = 'Confirme sua senha.';
-  } else if (!isMatch(form.password, form.confirmPassword)) {
-    errors.confirmPassword = 'As senhas não são iguais.';
-  }
-
-  return errors;
-}
-
-export default function RegisterScreen({ navigation }: RegisterScreenProps) {
-  const { signUp, error: authError, clearError } = useAuth();
-  const { theme, isDark } = useTheme();
-
-  const [form, setForm] = useState<FormState>(INITIAL_FORM);
-  const [fieldErrors, setFieldErrors] = useState<FormErrors>({});
-  const [submitting, setSubmitting] = useState(false);
-
-  function handleChange(field: keyof FormState, value: string) {
-    setForm((previousForm) => ({ ...previousForm, [field]: value }));
-
-    if (fieldErrors[field]) {
-      setFieldErrors((previousErrors) => ({ ...previousErrors, [field]: undefined }));
-    }
-    if (authError) {
-      clearError();
-    }
-  }
-
-  async function handleSubmit() {
-    const errors = validate(form);
-    setFieldErrors(errors);
-
-    if (Object.keys(errors).length > 0) {
-      return;
-    }
-
-    setSubmitting(true);
+  const handleRegister = async () => {
     try {
-      await signUp(form);
-      // Cadastro concluído -> signUp já autentica automaticamente.
-      // O RootNavigator troca sozinho para a stack autenticada.
-    } catch {
-      // "Este e-mail já está cadastrado." / "...usuário já está em uso."
-      // já ficam disponíveis em authError.
-    } finally {
-      setSubmitting(false);
+      // O signUp faz a validação completa e salva o usuário no AsyncStorage
+      await signUp({
+        name,
+        username,
+        email,
+        password,
+        confirmPassword,
+      });
+      
+      // Obs: Dependendo de como o App.tsx gerencia a navegação,
+      // ao fazer signUp com sucesso, ele já loga e manda para o Perfil sozinho!
+    } catch (error: any) {
+      // O backend do seu colega vai devolver mensagens exatas como "As senhas não são iguais."
+      Alert.alert('Erro', error.message || 'Não foi possível concluir o cadastro.');
     }
-  }
+  };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background }]}>
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView
-          contentContainerStyle={styles.container}
-          keyboardShouldPersistTaps="handled"
+    <ScrollView style={[styles.container, isDark ? styles.bgDark : styles.bgLight]} contentContainerStyle={styles.content}>
+      <CustomInput label="Nome" isDark={isDark} value={name} onChangeText={setName} />
+      <CustomInput label="Nome de usuário" isDark={isDark} value={username} onChangeText={setUsername} autoCapitalize="none" />
+      <CustomInput label="E-mail" isDark={isDark} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
+      <CustomInput label="Senha" isDark={isDark} value={password} onChangeText={setPassword} secureTextEntry />
+      <CustomInput label="Confirmação de senha" isDark={isDark} value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry />
+      
+      <CustomButton title="Cadastrar" isDark={isDark} onPress={handleRegister} style={styles.buttonSpacing} />
+      
+      <View style={styles.footer}>
+        <Text style={{ color: isDark ? '#ccc' : '#666' }}>Já tem cadastro?</Text>
+        
+        <TouchableOpacity 
+          style={styles.linkButton} 
+          onPress={() => navigation.navigate('Login')}
         >
-          <Text style={[styles.title, { color: theme.colors.text }]}>Criar conta</Text>
-          <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>
-            Preencha seus dados para se cadastrar
+          <Text style={{ 
+            color: isDark ? '#4da3ff' : '#007bff', 
+            fontWeight: 'bold', 
+            fontSize: 16 
+          }}>
+            Entrar
           </Text>
-
-          <CustomInput
-            label="Nome"
-            isDark={isDark}
-            placeholder="Seu nome completo"
-            value={form.name}
-            onChangeText={(value) => handleChange('name', value)}
-            error={fieldErrors.name}
-            editable={!submitting}
-          />
-
-          <CustomInput
-            label="Nome de usuário"
-            isDark={isDark}
-            placeholder="Como você vai usar para entrar"
-            autoCapitalize="none"
-            autoCorrect={false}
-            value={form.username}
-            onChangeText={(value) => handleChange('username', value)}
-            error={fieldErrors.username}
-            editable={!submitting}
-          />
-
-          <CustomInput
-            label="E-mail"
-            isDark={isDark}
-            placeholder="seuemail@exemplo.com"
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="email-address"
-            value={form.email}
-            onChangeText={(value) => handleChange('email', value)}
-            error={fieldErrors.email}
-            editable={!submitting}
-          />
-
-          <CustomInput
-            label="Senha"
-            isDark={isDark}
-            placeholder="Crie uma senha"
-            secureTextEntry
-            value={form.password}
-            onChangeText={(value) => handleChange('password', value)}
-            error={fieldErrors.password}
-            editable={!submitting}
-          />
-
-          <CustomInput
-            label="Confirmar senha"
-            isDark={isDark}
-            placeholder="Repita a senha"
-            secureTextEntry
-            value={form.confirmPassword}
-            onChangeText={(value) => handleChange('confirmPassword', value)}
-            error={fieldErrors.confirmPassword}
-            editable={!submitting}
-          />
-
-          {authError && (
-            <Text style={[styles.authError, { color: theme.colors.error }]}>{authError}</Text>
-          )}
-
-          <CustomButton
-            title={submitting ? 'Cadastrando...' : 'Cadastrar'}
-            isDark={isDark}
-            onPress={handleSubmit}
-            disabled={submitting}
-          />
-
-          <TouchableOpacity
-            style={styles.linkButton}
-            onPress={() => navigation.navigate('Login')}
-            disabled={submitting}
-          >
-            <Text style={[styles.linkText, { color: theme.colors.primary }]}>
-              Já tem cadastro? Entrar
-            </Text>
-          </TouchableOpacity>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-  },
-  flex: {
-    flex: 1,
-  },
-  container: {
-    flexGrow: 1,
-    padding: 24,
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 26,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: 14,
-    marginBottom: 24,
-  },
-  authError: {
-    fontSize: 13,
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  linkButton: {
-    marginTop: 18,
-    alignItems: 'center',
-  },
-  linkText: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
+  container: { flex: 1 },
+  content: { padding: 20 },
+  bgLight: { backgroundColor: '#f5f5f5' },
+  bgDark: { backgroundColor: '#121212' },
+  buttonSpacing: { marginTop: 16 },
+  footer: { marginTop: 24, alignItems: 'center' },
+  linkButton: { marginTop: 8, padding: 8 }
 });

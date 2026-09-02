@@ -1,14 +1,13 @@
-import {
+import React, {
   createContext,
-  createElement,
-  useCallback,
   useContext,
-  useEffect,
-  useMemo,
   useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  createElement,
   type ReactNode,
 } from 'react';
-
 import {
   authenticateUser,
   clearSession,
@@ -17,7 +16,7 @@ import {
   saveSession,
   updateUserProfile,
 } from '../services/authService';
-import type { AuthContextValue, Credentials } from '../types/auth';
+import type { Credentials, Session, ValidationResult } from '../types/auth';
 import type {
   PublicUser,
   RegisterInput,
@@ -25,6 +24,17 @@ import type {
 } from '../types/user';
 
 export const AuthContext = createContext<AuthContextValue | null>(null);
+
+export interface AuthContextValue {
+  user: PublicUser | null;
+  loading: boolean;
+  error: string | null;
+  signUp: (input: RegisterInput) => Promise<void>;
+  signIn: (credentials: Credentials) => Promise<void>;
+  signOut: () => Promise<void>;
+  updateProfile: (input: UpdateProfileInput) => Promise<void>;
+  clearError: () => void;
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<PublicUser | null>(null);
