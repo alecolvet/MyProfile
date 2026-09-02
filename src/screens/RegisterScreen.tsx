@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
-<<<<<<< HEAD
 import { StyleSheet, ScrollView, Alert, View, Text, TouchableOpacity } from 'react-native';
 import { CustomInput } from '../components/CustomInput';
 import { CustomButton } from '../components/CustomButton';
-import { isRequired, isValidEmail, isMatch } from '../services/authService';
-import { saveUser } from '../services/storageService';
+import { useAuth } from '../hooks/useAuth';
 
 export default function RegisterScreen({ navigation, isDark }: any) {
   const [name, setName] = useState('');
@@ -13,36 +11,26 @@ export default function RegisterScreen({ navigation, isDark }: any) {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  const handleRegister = async () => {
-    if (!isRequired(name) || !isRequired(username) || !isRequired(email) || !isRequired(password)) {
-      Alert.alert('Erro', 'Preencha todos os campos obrigatórios.');
-      return;
-    }
-    if (!isValidEmail(email)) {
-      Alert.alert('Erro', 'Informe um e-mail válido.');
-      return;
-    }
-    if (!isMatch(password, confirmPassword)) {
-      Alert.alert('Erro', 'As senhas não são iguais.');
-      return;
-    }
+  // Traz a função de cadastro do contexto global
+  const { signUp } = useAuth();
 
-    const newUser = { 
-      id: Date.now().toString(), 
-      name, 
-      username, 
-      email, 
-      password, 
-      phone: '', 
-      city: '', 
-      bio: '' 
-    };
-    
-    await saveUser(newUser);
-    
-    Alert.alert('Sucesso', 'Cadastro realizado! Faça seu login.', [
-      { text: 'OK', onPress: () => navigation.navigate('Login') }
-    ]);
+  const handleRegister = async () => {
+    try {
+      // O signUp faz a validação completa e salva o usuário no AsyncStorage
+      await signUp({
+        name,
+        username,
+        email,
+        password,
+        confirmPassword,
+      });
+      
+      // Obs: Dependendo de como o App.tsx gerencia a navegação,
+      // ao fazer signUp com sucesso, ele já loga e manda para o Perfil sozinho!
+    } catch (error: any) {
+      // O backend do seu colega vai devolver mensagens exatas como "As senhas não são iguais."
+      Alert.alert('Erro', error.message || 'Não foi possível concluir o cadastro.');
+    }
   };
 
   return (
@@ -72,3 +60,15 @@ export default function RegisterScreen({ navigation, isDark }: any) {
         </TouchableOpacity>
       </View>
     </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  content: { padding: 20 },
+  bgLight: { backgroundColor: '#f5f5f5' },
+  bgDark: { backgroundColor: '#121212' },
+  buttonSpacing: { marginTop: 16 },
+  footer: { marginTop: 24, alignItems: 'center' },
+  linkButton: { marginTop: 8, padding: 8 }
+});

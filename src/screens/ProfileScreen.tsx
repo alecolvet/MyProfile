@@ -1,35 +1,17 @@
-<<<<<<< HEAD
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { StyleSheet, SafeAreaView, View } from 'react-native';
 import { ProfileCard } from '../components/ProfileCard';
 import { ThemeSwitch } from '../components/ThemeSwitch';
 import { CustomButton } from '../components/CustomButton';
 import { Loading } from '../components/Loading';
-import { getUser, clearSession } from '../services/storageService';
-import { User } from '../types/user';
+import { useAuth } from '../hooks/useAuth';
 
-export default function ProfileScreen({ navigation, isDark, setIsDark, onLogout }: any) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  // Busca os dados reais sempre que a tela ganha foco (caso volte da edição)
-  useEffect(() => {
-    const fetchUser = async () => {
-      setLoading(true);
-      const userData = await getUser();
-      setUser(userData);
-      setLoading(false);
-    };
-    
-    const unsubscribe = navigation.addListener('focus', fetchUser);
-    fetchUser();
-    
-    return unsubscribe;
-  }, [navigation]);
+export default function ProfileScreen({ navigation, isDark, setIsDark }: any) {
+  // Pegamos o usuário logado e a função de Sair direto do contexto
+  const { user, signOut, loading } = useAuth();
 
   const handleLogout = async () => {
-    await clearSession();
-    onLogout(); // Retorna para a tela de Login
+    await signOut(); // Isso avisa o App.tsx que a sessão acabou, mandando para o Login
   };
 
   if (loading || !user) return <Loading isDark={isDark} />;
@@ -58,3 +40,15 @@ export default function ProfileScreen({ navigation, isDark, setIsDark, onLogout 
         />
         
       </View>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  content: { flex: 1, padding: 20, alignItems: 'center' },
+  bgLight: { backgroundColor: '#f5f5f5' },
+  bgDark: { backgroundColor: '#121212' },
+  cardWrapper: { width: '100%', marginVertical: 24 },
+  logoutBtn: { marginTop: 16, backgroundColor: '#dc3545' }
+});
