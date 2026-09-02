@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, SafeAreaView, View } from 'react-native';
 import { ProfileCard } from '../components/ProfileCard';
@@ -57,15 +58,3 @@ export default function ProfileScreen({ navigation, isDark, setIsDark, onLogout 
         />
         
       </View>
-    </SafeAreaView>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  content: { flex: 1, padding: 20, alignItems: 'center' },
-  bgLight: { backgroundColor: '#f5f5f5' },
-  bgDark: { backgroundColor: '#121212' },
-  cardWrapper: { width: '100%', marginVertical: 24 },
-  logoutBtn: { marginTop: 16, backgroundColor: '#dc3545' }
-});

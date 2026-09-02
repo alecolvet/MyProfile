@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+<<<<<<< HEAD
 import { StyleSheet, View, Alert, Text, TouchableOpacity } from 'react-native'; // <-- Adicionado aqui!
 import { CustomInput } from '../components/CustomInput';
 import { CustomButton } from '../components/CustomButton';
@@ -64,14 +65,3 @@ export default function LoginScreen({ navigation, isDark, onLoginSuccess }: any)
         </TouchableOpacity>
       </View>
     </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, justifyContent: 'center' },
-  bgLight: { backgroundColor: '#f5f5f5' },
-  bgDark: { backgroundColor: '#121212' },
-  buttonSpacing: { marginTop: 16 },
-  footer: { marginTop: 24, alignItems: 'center' },
-  linkButton: { marginTop: 8, padding: 8 }
-});

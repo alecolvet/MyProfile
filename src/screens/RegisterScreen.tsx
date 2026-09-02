@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+<<<<<<< HEAD
 import { StyleSheet, ScrollView, Alert, View, Text, TouchableOpacity } from 'react-native';
 import { CustomInput } from '../components/CustomInput';
 import { CustomButton } from '../components/CustomButton';
@@ -71,15 +72,3 @@ export default function RegisterScreen({ navigation, isDark }: any) {
         </TouchableOpacity>
       </View>
     </ScrollView>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  content: { padding: 20 },
-  bgLight: { backgroundColor: '#f5f5f5' },
-  bgDark: { backgroundColor: '#121212' },
-  buttonSpacing: { marginTop: 16 },
-  footer: { marginTop: 24, alignItems: 'center' },
-  linkButton: { marginTop: 8, padding: 8 }
-});
