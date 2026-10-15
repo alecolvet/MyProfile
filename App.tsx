@@ -1,37 +1,29 @@
+import React from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { ThemeProvider } from './src/context/ThemeContext';
+import { AuthProvider } from './src/context/AuthContext';
+import { TaskProvider } from './src/context/TaskContext';
+import { AppRoutes } from './src/routes/AppRoutes';
+import { useTheme } from './src/hooks/useTheme';
 
-import { AuthProvider } from './src/hooks/useAuth';
-import {
-  ThemeProvider,
-  useTheme,
-} from './src/hooks/useTheme';
-import { RootNavigator } from './src/navigation/RootNavigator';
-
-function ThemedStatusBar() {
-  const { themeName } = useTheme();
-
+const RootContent: React.FC = () => {
+  const { isDark } = useTheme();
   return (
-    <StatusBar
-      style={
-        themeName === 'dark'
-          ? 'light'
-          : 'dark'
-      }
-    />
+    <>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+      <AppRoutes />
+    </>
   );
-}
+};
 
 export default function App() {
   return (
-    <SafeAreaProvider>
-      <ThemeProvider>
-        <AuthProvider>
-          <ThemedStatusBar />
-
-          <RootNavigator />
-        </AuthProvider>
-      </ThemeProvider>
-    </SafeAreaProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <TaskProvider>
+          <RootContent />
+        </TaskProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

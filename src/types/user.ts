@@ -1,13 +1,17 @@
+export type UserRole = 'admin' | 'user';
+export type TreatmentPreference = 'Sr.' | 'Sra.' | 'Srta.' | '';
+
 export type User = {
-  id: string;
+  id: number;
   name: string;
+  role: UserRole;
   username: string;
-  email: string;
-  password: string;
-  phone: string;
-  city: string;
-  bio: string;
-  createdAt: string;
+  email?: string;
+  password?: string;
+  phone?: string;
+  city?: string;
+  bio?: string;
+  createdAt?: string;
 };
 
 export type PublicUser =
